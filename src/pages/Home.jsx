@@ -10,27 +10,25 @@ const Home = () => {
   const [query, setQuery] = useState("batman");
   const [page, setPage] = useState(1);
   const [yearFilter, setYearFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [totalResults, setTotalResults] = useState(0);
 
-  // Fetch movies whenever query OR page changes
+  // Fetch movies whenever parameters change
   useEffect(() => {
     fetchMovies();
-  }, [query, page]);
+  }, [query, page, yearFilter, typeFilter]);
 
   const fetchMovies = async () => {
-    const data = await searchMovies(query, page);
+    const data = await searchMovies(query, page, typeFilter, yearFilter);
 
     if (data.Search) {
-      setMovies(data.Search); // replace movies (important!)
+      setMovies(data.Search); // replace movies
+      setTotalResults(parseInt(data.totalResults, 10) || 0);
     } else {
       setMovies([]);
+      setTotalResults(0);
     }
   };
-
-  // Filter by year
-  const filteredMovies = movies.filter((movie) => {
-    if (!yearFilter) return true;
-    return movie.Year === yearFilter;
-  });
 
   return (
     
@@ -41,38 +39,61 @@ const Home = () => {
 </h1>
       <SearchBar setQuery={setQuery} setPage={setPage} />
 
-      {/* Year Filter */}
-      <div className="my-4">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 my-4">
         <input
           type="text"
           placeholder="Filter by Year (e.g. 2020)"
-          className="border p-2 rounded"
+          className="border p-2 rounded flex-1 text-black"
           value={yearFilter}
-          onChange={(e) => setYearFilter(e.target.value)}
+          onChange={(e) => {
+            setYearFilter(e.target.value);
+            setPage(1);
+          }}
         />
+        <select
+          className="border p-2 rounded flex-1 bg-white text-black"
+          value={typeFilter}
+          onChange={(e) => {
+            setTypeFilter(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All Types</option>
+          <option value="movie">Movie</option>
+          <option value="series">Series</option>
+          <option value="episode">Episode</option>
+        </select>
       </div>
 
       {/* Movie Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {filteredMovies.map((movie) => (
-          <MovieCard key={movie.imdbID} movie={movie} />
-        ))}
+        {movies.length > 0 ? (
+          movies.map((movie) => (
+            <MovieCard key={movie.imdbID} movie={movie} />
+          ))
+        ) : (
+          <p className="text-white text-center col-span-full">No movies found.</p>
+        )}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6 gap-4">
+      <div className="flex justify-center mt-6 gap-4 items-center">
         <button
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-gray-300 text-black px-4 py-2 rounded disabled:opacity-50"
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
         >
           Prev
         </button>
 
-        <span className="text-lg font-semibold text-yellow-700">Page {page}</span>
+        <span className="text-lg font-semibold text-yellow-500">
+          Page {page} {totalResults > 0 && `of ${Math.ceil(totalResults / 10)}`}
+        </span>
 
         <button
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-gray-300 text-black px-4 py-2 rounded disabled:opacity-50"
+          disabled={page * 10 >= totalResults || totalResults === 0}
           onClick={() => setPage(page + 1)}
         >
           Next

@@ -5,13 +5,14 @@ import { useState } from "react";
 const SearchBar = ({ setQuery, setPage }) => {
   const [input, setInput] = useState("");
 
-  const handleSearch = () => {
+  const handleSearch = (e) => {
+    e.preventDefault();
     setQuery(input);
     setPage(1); // reset page when new search
   };
 
   return (
-    <div className="flex gap-2">
+    <form onSubmit={handleSearch} className="flex gap-2">
       <input
         type="text"
         placeholder="Search movies..."
@@ -20,12 +21,12 @@ const SearchBar = ({ setQuery, setPage }) => {
         onChange={(e) => setInput(e.target.value)}
       />
       <button
-        onClick={handleSearch}
+        type="submit"
         className="bg-blue-500 text-white px-4 rounded"
       >
         Search
       </button>
-    </div>
+    </form>
   );
 };
 
